@@ -1,0 +1,40 @@
+swagger: '2.0'
+info:
+  title: Thingies API
+  description: Probably the collest API out there ;-)
+  contact:
+    name: Patrice Krakow
+    email: patrice.krakow@gmail.com
+  version: 1.0.0
+basePath: /
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /thingies/{thingyId}:
+    get:
+      summary: Get a `thingy`
+      parameters:
+        - in: path
+          name: thingyId
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Thingy'
+definitions:
+  Thingy:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: string
+      name:
+        type: string
