@@ -99,9 +99,75 @@ Failures:
 There were 2 pact failures
 ```
 
-The verification fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
+The verification obviously fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
 
-QUESTION: How can I let the `pact_verifier_cli` set the _Provider State_?
-ANSWER: Haha, I found the `--state-change-url <state-change-url>` option of the `pact_verifier_cli` command.
+However, this is where the _Provider States_ come to the rescue by _"allowing you to set up data on the provider by injecting it straight into the data source before the interaction is run, so that it can make a response that matches what the consumer expects."_ But, how does this (magic?) _"injection"_ work? No magic, just before sending the request of an interaction the `pact_verifier_cli` sends the _Provider State_, i.e. the free text representing the _Provider State_, to the _provider_ using the `POST /` endpoint with the following JSON structure:
+
+```json
+{
+  "action": "setup",
+  "params": {},
+  "state": "has one thingy with '123' as an thingyId"
+}
+```
+
+Then, it means that, as a _provider_ you have to **manually** map (by writing some new specific code) this long string representing the _Provider State_ invented by the _consumer_ to the injection of some specific test data. Something like this:
+
+```javascript
+app.post('/', (req, res) => {
+  console.log(req.body)
+  const providerState = req.body.state
+  switch(providerState) {
+    case "has one thingy with '123' as an thingyId":
+      thingies.push({
+        id: "123",
+        name: "stuff"
+      })
+      break
+    default:
+      res.status(404).end()
+      return
+  }
+  res.status(201).end()
+})
+````
+
+> :warning: This is not production-ready code ;-)
+
+So, you can see that this technique can be error-prone and maybe difficult to scale when a _provider_ has a lot of _customers_, but the effort needed must be put in perspective with the work needed to maintain and prepare "connected test environment(s)" in order to perform valuable end-to-end testing. As a reminder the goal of Consumer-Driven Contract Testing with Pact is to remove the need of end-to-end testing!
+
+```text
+pact_verifier_cli --file consumer.pact.json --url http://localhost --port 3000 --state-change-url http://localhost:3000
+```
+
+```text
+  Given has one thingy with '123' as an thingyId
+13:54:13 [ERROR] Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
+13:54:13 [WARN]
+
+Please note:
+We are tracking events anonymously to gather important usage statistics like Pact version and operating system. To disable tracking, set the 'PACT_DO_NOT_TRACK' environment variable to 'true'.
+
+
+
+Verifying a pact between Thingies Consumer Example and Thingies Provider Example
+
+  get one thingy
+    returns a response which
+      has status code 200 (OK)
+      includes headers
+        "Content-Type" with value "application/json; charset=utf-8" (OK)
+      has a matching body (OK)
+
+
+Failures:
+
+1) Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
+
+
+There were 1 pact failures
+```
+
+QUESTION: I still have that `Failed to load pact` error I do not understand? Which component is supposed to "load the Pact"?
 
 (to be continued...)
