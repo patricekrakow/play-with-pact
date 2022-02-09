@@ -102,5 +102,6 @@ There were 2 pact failures
 The verification fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
 
 QUESTION: How can I let the `pact_verifier_cli` set the _Provider State_?
+ANSWER: Haha, I found the `--state-change-url <state-change-url>` option of the `pact_verifier_cli` command.
 
 (to be continued...)
