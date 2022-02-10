@@ -39,7 +39,11 @@ she/he expects to receive the following response:
 pact-stub-server --file consumer.pact.json --port 8000
 ```
 
-and then runs her/his [`consumer.test.cmd`](./consumer.test.cmd) script:
+and then runs her/his test script, e.g.[`consumer.test.cmd`](./consumer.test.cmd):
+
+```text
+consumer.test.cmd
+```
 
 ```text
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
