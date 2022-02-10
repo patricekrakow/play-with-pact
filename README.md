@@ -14,15 +14,15 @@ This scenario is using [`pact-stub-server`](https://github.com/pact-foundation/p
 
 ## Workflow
 
-1\. The _consumer_ gets (via a developer portal) the OpenAPI (f.k.a. Swagger) document of the "Thingies API", [`thingies-api.oas2.yaml`](./thingies-api.oas2.yaml).
+1\. The _consumer_ gets (typically via a developer portal) the OpenAPI (f.k.a. Swagger) document of the "Thingies API", [`thingies-api.oas2.yaml`](./thingies-api.oas2.yaml).
 
-2\. The _consumer_ wants to use the "Thingies API" with her/his own test data, she/he sends:
+2\. The _consumer_ wants to use the "Thingies API" with her/his own test data. For instance when she/he sends the request:
 
 ```text
-GET localhost:8001/thingies/123
+GET localhost:8000/thingies/123
 ```
 
-and expects to receive:
+she/he expects to receive the following response:
 
 ```json
 {
@@ -31,15 +31,15 @@ and expects to receive:
 }
 ```
 
-3\. The _consumer_ creates a Pact file that follows her/his scenario, [`consumer.pact.json`](./consumer.pact.json).
+3\. Therefore, the _consumer_ creates a Pact file that follows her/his scenario, [`consumer.pact.json`](./consumer.pact.json).
 
-4\. The _consumer_ start a Pact Stub Server using the `pact-stub-server` command:
+4\. And then, the _consumer_ can start a Pact Stub Server using the `pact-stub-server` command:
 
 ```text
 pact-stub-server --file consumer.pact.json --port 8000
 ```
 
-and then run her/his [`consumer.test.cmd`](./consumer.test.cmd) script, which run successfully:
+and then runs her/his [`consumer.test.cmd`](./consumer.test.cmd) script:
 
 ```text
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -49,15 +49,15 @@ and then run her/his [`consumer.test.cmd`](./consumer.test.cmd) script, which ru
 Passed.
 ```
 
-5\. Then, the _consumer_ passes her/his Pact file, [`consumer.pact.json`](./consumer.pact.json), to the _provider_ so she/he can verify it.
+5\. Finally, the _consumer_ passes her/his Pact file, [`consumer.pact.json`](./consumer.pact.json), to the _provider_ so she/he can verify it.
 
-6\. The _provider_ runs her/his implementation of the "Thingies API", [`app.js`](./app.js):
+6\. The _provider_ runs her/his implementation of the "Thingies API", e.g. [`provider.app.v1.js`](./provider.app.v1.js):
 
 ```text
 node provider.app.v1
 ```
 
-7\. The _provider_ verifies the consumer Pact file, [`consumer.pact.json`](./consumer.pact.json), using the `pact_verifier_cli` command:
+7\. The _provider_ can then verify the consumer Pact file, [`consumer.pact.json`](./consumer.pact.json), using the `pact_verifier_cli` command:
 
 ```text
 pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000
@@ -98,7 +98,7 @@ There were 1 pact failures
 
 The verification obviously fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
 
-However, this is where the _Provider States_ come to the rescue by _"allowing you to set up data on the provider by injecting it straight into the data source before the interaction is run, so that it can make a response that matches what the consumer expects."_ But, how does this (magic?) _"injection"_ work? No magic, just before sending the request of an interaction the `pact_verifier_cli` sends the _Provider State_, i.e. the free text representing the _Provider State_, to the _provider_ using the `POST /` endpoint with the following JSON structure:
+However, this is where the _Provider States_ come to the rescue by **_"allowing you to set up data on the provider by injecting it straight into the data source before the interaction is run, so that it can make a response that matches what the consumer expects."_** But, how does this (magic?) **_"injection"_** work? No magic, just before sending the request of an interaction the `pact_verifier_cli` sends the _Provider State_, i.e. the free text representing the _Provider State_, to the _provider_ using the `POST /` endpoint with the following JSON structure:
 
 ```json
 {
@@ -108,11 +108,10 @@ However, this is where the _Provider States_ come to the rescue by _"allowing yo
 }
 ```
 
-Then, it means that, as a _provider_ you have to **manually** map (by writing some new specific code) this long string representing the _Provider State_ invented by the _consumer_ to the injection of some specific test data. Something like this:
+Then, it means that, as a _provider_ you have to **manually** map (by writing some new specific code) this long string representing the _Provider State_ invented by the _consumer_ with the **injection of some specific test data**. Something like this, implemented in [`provider.app.v2.js`](./provider.app.v2.js):
 
 ```javascript
 app.post('/', (req, res) => {
-  console.log(req.body)
   const providerState = req.body.state
   switch(providerState) {
     case "has one thingy with '123' as an thingyId":
@@ -131,7 +130,7 @@ app.post('/', (req, res) => {
 
 > :warning: This is not production-ready code ;-)
 
-So, you can see that this technique can be error-prone and maybe difficult to scale when a _provider_ has a lot of _customers_, but the effort needed must be put in perspective with the work needed to maintain and prepare "connected test environment(s)" in order to perform valuable end-to-end testing. As a reminder the goal of Consumer-Driven Contract Testing with Pact is to remove the need of end-to-end testing!
+So, you can see that this technique can be error-prone and maybe difficult to scale when a _provider_ has a lot of _customers_, but this effort needed must be put in perspective with the work needed to maintain and prepare "connected test environment(s)" in order to perform valuable end-to-end testing. As a reminder, the goal of _Consumer-Driven Contract Testing with Pact_ is to remove the need of end-to-end testing!
 
 ```text
 node provider.app.v2
@@ -159,3 +158,5 @@ Verifying a pact between Thingies Consumer Example and Thingies Provider Example
         "Content-Type" with value "application/json; charset=utf-8" (OK)
       has a matching body (OK)
 ```
+
+Yeah!
