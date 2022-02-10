@@ -54,20 +54,19 @@ Passed.
 6\. The _provider_ runs her/his implementation of the "Thingies API", [`app.js`](./app.js):
 
 ```text
-node provider.app
+node provider.app.v1
 ```
 
 7\. The _provider_ verifies the consumer Pact file, [`consumer.pact.json`](./consumer.pact.json), using the `pact_verifier_cli` command:
 
 ```text
-pact_verifier_cli --file consumer.pact.json --url http://localhost --port 3000
+pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000
 ```
 
 ```text
   Given has one thingy with '123' as an thingyId
     WARNING: State Change ignored as there is no state change URL provided
-17:47:23 [ERROR] Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
-17:47:23 [WARN]
+09:15:55 [WARN]
 
 Please note:
 We are tracking events anonymously to gather important usage statistics like Pact version and operating system. To disable tracking, set the 'PACT_DO_NOT_TRACK' environment variable to 'true'.
@@ -88,15 +87,13 @@ Failures:
 
 1) Verifying a pact between Thingies Consumer Example and Thingies Provider Example Given has one thingy with '123' as an thingyId - get one thingy
     1.1) has a matching body
-           expected 'application/json;charset=utf-8' body but was 'text/html;charset=utf-8'
+           / -> Expected body Present(27 bytes) but was empty
     1.2) has status code 200
            expected 200 but was 404
-    1.3) includes header 'Content-Type' with value 'application/json; charset=utf-8'
-           Expected header 'Content-Type' to have value 'application/json; charset=utf-8' but was 'text/html; charset=utf-8'
-2) Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
+    1.3) includes header 'Content-Type' with value '"application/json; charset=utf-8"'
+           Expected header 'Content-Type' to have value '"application/json; charset=utf-8"' but was ''
 
-
-There were 2 pact failures
+There were 1 pact failures
 ```
 
 The verification obviously fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
@@ -137,13 +134,16 @@ app.post('/', (req, res) => {
 So, you can see that this technique can be error-prone and maybe difficult to scale when a _provider_ has a lot of _customers_, but the effort needed must be put in perspective with the work needed to maintain and prepare "connected test environment(s)" in order to perform valuable end-to-end testing. As a reminder the goal of Consumer-Driven Contract Testing with Pact is to remove the need of end-to-end testing!
 
 ```text
-pact_verifier_cli --file consumer.pact.json --url http://localhost --port 3000 --state-change-url http://localhost:3000
+node provider.app.v2
+```
+
+```text
+pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000 --state-change-url http://localhost:3000
 ```
 
 ```text
   Given has one thingy with '123' as an thingyId
-13:54:13 [ERROR] Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
-13:54:13 [WARN]
+09:18:15 [WARN]
 
 Please note:
 We are tracking events anonymously to gather important usage statistics like Pact version and operating system. To disable tracking, set the 'PACT_DO_NOT_TRACK' environment variable to 'true'.
@@ -158,16 +158,4 @@ Verifying a pact between Thingies Consumer Example and Thingies Provider Example
       includes headers
         "Content-Type" with value "application/json; charset=utf-8" (OK)
       has a matching body (OK)
-
-
-Failures:
-
-1) Failed to load pact - Failed to load pact 'http://localhost' - Request failed - error sending request for url (http://localhost/): error trying to connect: tcp connect error: No connection could be made because the target machine actively refused it. (os error 10061)
-
-
-There were 1 pact failures
 ```
-
-QUESTION: I still have that `Failed to load pact` error I do not understand? Which component is supposed to "load the Pact"?
-
-(to be continued...)
