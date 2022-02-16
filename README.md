@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This is an attempt to create the **simplest** scenario to describe a _Consumer-Driven Contract Testing_ workflow with _Pact_.
+This is an attempt to create the **simplest** demo to describe a _Consumer-Driven Contract Testing_ workflow with _Pact_.
 
 ## Prerequisites
 
@@ -10,13 +10,71 @@ This scenario has been developed on Windows.
 
 This scenario is using [`node`](https://nodejs.org/), [`curl`](https://curl.se/) and [`jq`](https://stedolan.github.io/jq/).
 
-This scenario is using [`pact-stub-server`](https://github.com/pact-foundation/pact-stub-server/releases/tag/v0.4.4) and [`pact_verifier_cli`](https://github.com/pact-foundation/pact-reference/releases/tag/pact_verifier_cli-v0.9.7).
+This scenario is also using [`pact-stub-server`](https://github.com/pact-foundation/pact-stub-server/releases/tag/v0.4.4) and [`pact_verifier_cli`](https://github.com/pact-foundation/pact-reference/releases/tag/pact_verifier_cli-v0.9.7).
+
+### Node.js
+
+```text
+node --version
+```
+
+```text
+v16.13.2
+```
+
+### cURL
+
+```text
+curl --version
+```
+
+```text
+curl 7.79.1 (Windows) libcurl/7.79.1 Schannel
+Release-Date: 2021-09-22
+Protocols: dict file ftp ftps http https imap imaps pop3 pop3s smtp smtps telnet tftp
+Features: AsynchDNS HSTS IPv6 Kerberos Largefile NTLM SPNEGO SSL SSPI UnixSockets
+```
+
+### jq
+
+```text
+jq --version
+```
+
+```text
+jq-1.6
+```
+
+### Standalone Pact Stub Server
+
+```text
+pact-stub-server --version
+```
+
+```text
+pact-stub-server v0.4.4
+pact stub server version  : v0.4.4
+pact specification version: v3.0.0
+```
+
+### Pact Verifier CLI
+
+```text
+pact_verifier_cli --version
+```
+
+```text
+pact_verifier_cli 0.9.7
+pact verifier version   : v0.9.7
+pact specification      : v4.0
+models version          : v0.2.7
+```
 
 ## Workflow
 
-1\. The _consumer_ gets (typically via a developer portal) the OpenAPI (f.k.a. Swagger) document of the "Thingies API", [`thingies-api.oas2.yaml`](./thingies-api.oas2.yaml).
+1\. The _consumer_ gets (typically via a developer portal) the OpenAPI (f.k.a. Swagger) document of an API. For this demo, we will use the "Thingies API", [`thingies-api.oas2.yaml`](./thingies-api.oas2.yaml).
 
-2\. The _consumer_ wants to use the "Thingies API" with her/his own test data. For instance when she/he sends the request:
+2\. The _consumer_ wants to use the "Thingies API" with **her/his** own test data. For instance when she/he sends the request:
 
 ```text
 GET localhost:8000/thingies/123
@@ -31,15 +89,17 @@ she/he expects to receive the following response:
 }
 ```
 
-3\. Therefore, the _consumer_ creates a Pact file that follows her/his scenario, [`consumer.pact.json`](./consumer.pact.json).
+3\. Therefore, the _consumer_ creates a _Pact file_ that follows **her/his** scenario/interaction, [`consumer.pact.json`](./consumer.pact.json).
 
-4\. And then, the _consumer_ can start a Pact Stub Server using the `pact-stub-server` command:
+> **_Warning._** There is, of course, a risk that the _consumer_ does not respect the actual behaviour of the API when defining her/his scenario/interaction, that's why there is a **_verification_** step afterwards.
+
+4\. And then, the _consumer_ can start a _Pact Stub Server_ using the `pact-stub-server` command with the _Pact file_:
 
 ```text
 pact-stub-server --file consumer.pact.json --port 8000
 ```
 
-and then runs her/his test script, e.g.[`consumer.test.cmd`](./consumer.test.cmd):
+in order to run her/his test script, e.g.[`consumer.test.cmd`](./consumer.test.cmd):
 
 ```text
 consumer.test.cmd
@@ -53,7 +113,9 @@ consumer.test.cmd
 Passed.
 ```
 
-5\. Finally, the _consumer_ passes her/his Pact file, [`consumer.pact.json`](./consumer.pact.json), to the _provider_ so she/he can verify it.
+> **_Remark._** At this stage, this test will obviously work as it is the same _consumer_ that decides, within the test script, what the response should be, but also decides, within the _Pact file_ run by the _Pact Stub Server_, what the response will be. This test is like a self-fulfilling prophecy! Again, that's why there is a **_verification_** step afterwards, during which the _provider_ will verify that the _Pact file_ created by the _consumer_ makes sense or not.
+
+5\. Now, the _consumer_ passes her/his Pact file, [`consumer.pact.json`](./consumer.pact.json), to the _provider_ so she/he can verify it.
 
 6\. The _provider_ runs her/his implementation of the "Thingies API", e.g. [`provider.app.v1.js`](./provider.app.v1.js):
 
@@ -61,7 +123,11 @@ Passed.
 node provider.app.v1
 ```
 
-7\. The _provider_ can then verify the consumer Pact file, [`consumer.pact.json`](./consumer.pact.json), using the `pact_verifier_cli` command:
+```text
+Provider service is running at localhost:3000...
+```
+
+7\. The _provider_ can then verify the consumer Pact file, [`consumer.pact.json`](./consumer.pact.json), with the _Pact Verifier CLI_ using the `pact_verifier_cli` command. This tool will read the _Pact file_ the other way around: it will send the `request` of the `interaction` to the actual implementation of the "Thingies API" and check if the actual response corresponds to the `response` defined by the _consumer_ in the _Pact file_.
 
 ```text
 pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000
@@ -102,7 +168,7 @@ There were 1 pact failures
 
 The verification obviously fails as the test data invented by the _consumer_ does not match the test/real data used by the _provider_.
 
-However, this is where the _Provider States_ come to the rescue by **_"allowing you to set up data on the provider by injecting it straight into the data source before the interaction is run, so that it can make a response that matches what the consumer expects."_** But, how does this (magic?) **_"injection"_** work? No magic, just before sending the request of an interaction the `pact_verifier_cli` sends the _Provider State_, i.e. the free text representing the _Provider State_, to the _provider_ using the `POST /` endpoint with the following JSON structure:
+This is where the _Provider States_ come to the rescue by **_"allowing you to set up data on the provider by injecting it straight into the data source before the interaction is run, so that it can make a response that matches what the consumer expects."_** But, how does this **_"injection"_** work? No magic, just before sending the request of an interaction the `pact_verifier_cli` sends the _Provider State_, i.e. the free text representing the _Provider State_, to the _provider_ using a `POST /` endpoint with the following JSON structure:
 
 ```json
 {
@@ -112,7 +178,7 @@ However, this is where the _Provider States_ come to the rescue by **_"allowing 
 }
 ```
 
-Then, it means that, as a _provider_ you have to **manually** map (by writing some new specific code) this long string representing the _Provider State_ invented by the _consumer_ with the **injection of some specific test data**. Something like this, implemented in [`provider.app.v2.js`](./provider.app.v2.js):
+So, it means that, as a _provider_ you have to **manually** map (by writing some new specific code) this long string representing the _Provider State_ invented by the _consumer_ with the **injection of some specific test data**. Something like this, implemented in [`provider.app.v2.js`](./provider.app.v2.js):
 
 ```javascript
 app.post('/', (req, res) => {
@@ -132,13 +198,17 @@ app.post('/', (req, res) => {
 })
 ````
 
-> :warning: This is not production-ready code ;-)
+> **_Warning._** This is not production-ready code ;-)
 
 So, you can see that this technique can be error-prone and maybe difficult to scale when a _provider_ has a lot of _customers_, but this effort needed must be put in perspective with the work needed to maintain and prepare "connected test environment(s)" in order to perform valuable end-to-end testing. As a reminder, the goal of _Consumer-Driven Contract Testing with Pact_ is to remove the need of end-to-end testing!
+
+Running the updated version of implementation of the "Thingies API", [`provider.app.v2.js`](./provider.app.v2.js):
 
 ```text
 node provider.app.v2
 ```
+
+We can re-run the `pact_verifier_cli` command specifying the URL of the `POST` endpoing using the `--state-change-url` option:
 
 ```text
 pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000 --state-change-url http://localhost:3000
