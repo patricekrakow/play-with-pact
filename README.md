@@ -2,7 +2,15 @@
 
 ## Abstract
 
-This is an attempt to create the **simplest** demo to describe a _Consumer-Driven Contract Testing_ workflow with _Pact_.
+This is an attempt to create the **simplest** demo to describe _Consumer-Driven Contract Testing with Pact_.
+
+[Pact](https://docs.pact.io/) introduces a (new) way to test the interactions (over the network) between different components **without** the need to run these components together within the same (shared) environment! In other words, it's an alternative to _end-to-end testing_, which is called _consumer-driven contract testing_.
+
+In addition to that, it unambiguously addresses the problematic of **test data**. I do think that (traditional) tools that are supposed to help performing end-to-end testing, such as _[service virtualization](https://en.wikipedia.org/wiki/Service_virtualization)_, leave the question of test data - or more precisely the question of how to set the right test data at the right moment in order to correctly perform the testing of a specific interaction -  as "the elephant in the room".
+
+Pact addresses the problematic of **test data** with the key notion of _**Provider State**_. I do see this notion of _Provider State_ as the cornerstone of Pact! But, first, with Pact, you have to understand that one (and only one) interaction - a single request-response pair - is tested at a time, independently. You never (ever) test any sequences of interactions! That means that for each interaction you have to define precisely in which _**state**_ the provider is, and that's what is called the _**Provider State**_.
+
+[To be continued...]
 
 ## Prerequisites
 
@@ -91,7 +99,7 @@ she/he expects to receive the following response:
 
 3\. Therefore, the _consumer_ creates a _Pact file_ that follows **her/his** scenario/interaction, [`consumer.pact.json`](./consumer.pact.json).
 
-> **_Warning._** There is, of course, a risk that the _consumer_ does not respect the actual behaviour of the API when defining her/his scenario/interaction, that's why there is a **_verification_** step afterwards.
+> **_Warning._** There is, of course, a risk that the _consumer_ does not respect the actual behavior of the API when defining her/his scenario/interaction, that's why there is a **_verification_** step afterwards.
 
 4\. And then, the _consumer_ can start a _Pact Stub Server_ using the `pact-stub-server` command with the _Pact file_:
 
@@ -208,7 +216,7 @@ Running the updated version of implementation of the "Thingies API", [`provider.
 node provider.app.v2
 ```
 
-We can re-run the `pact_verifier_cli` command specifying the URL of the `POST` endpoing using the `--state-change-url` option:
+We can re-run the `pact_verifier_cli` command specifying the URL of the `POST` endpoint using the `--state-change-url` option:
 
 ```text
 pact_verifier_cli --file consumer.pact.json --hostname localhost --port 3000 --state-change-url http://localhost:3000
