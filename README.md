@@ -242,3 +242,7 @@ Verifying a pact between Thingies Consumer Example and Thingies Provider Example
 ```
 
 Yeah!
+
+## References
+
+* Skurrie, B. (2014, December 5). _Enter the Pact Matrix. Or, how to decouple the release cycles of your microservices._ REA Group Blog. <https://www.rea-group.com/about-us/news-and-insights/blog/enter-the-pact-matrix-or-how-to-decouple-the-release-cycles-of-your-microservices/>
