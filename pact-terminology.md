@@ -6,7 +6,7 @@ The _service consumer_ is a component/deployable-unit that initiates HTTP reques
 
 ## Service Provider
 
-The _service provider_ is a component/deployable-unit that responds to HTTP requests from the _service consumer_.
+The _service provider_ is a component/deployable-unit that responds to the HTTP requests initiated from the _service consumer_.
 
 ## Interaction
 
